@@ -3,9 +3,7 @@
 using namespace std;
 
 int main(){
-    cout<<"test"<<endl;
-    cout<<"qqq"<<endl;
-
+    cout<<"this is webserver"<<endl;
 
     return 0;
 }
