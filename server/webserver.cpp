@@ -19,7 +19,7 @@ WebServer::WebServer(
         strncat(srcDir_, "/resources/", 16);
 
 
-        InitEventMode_(trigMode);
+        InitEventMode_(trigMode);//
 }
 
 WebServer::~WebServer()
