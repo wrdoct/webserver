@@ -34,7 +34,7 @@ public:
 private:
     int epollFd_; 
 
-    std::vector<struct epoll_event> events_;  //检测到的事件的集合 
+    std::vector<struct epoll_event> events_; 
 };
 
 #endif //EPOLLER_H
