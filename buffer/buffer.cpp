@@ -56,9 +56,9 @@ void Buffer::Append(const char* str, size_t len){
 void Buffer::Append(const void* data, size_t len){
 
 }
-/*void Buffer::Append(const Buffer& buff){
+void Buffer::Append(const Buffer& buff){
 
-}*/
+}
 
 ssize_t Buffer::ReadFd(int fd, int* Errno){
 
