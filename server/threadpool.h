@@ -55,7 +55,7 @@ public:
             std::lock_guard<std::mutex> locker(pool_->mtx);
             pool_->tasks.emplace(std::forward<F>(task));
         }
-        pool_->cond.notify_one(); //
+        pool_->cond.notify_one(); 
     }
 
 
