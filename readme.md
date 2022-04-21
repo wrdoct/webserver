@@ -35,48 +35,16 @@
 ├── Makefile
 ├── readme.md
 ├── resources
-│   ├── 400.html
-│   ├── 403.html
-│   ├── 404.html
-│   ├── 405.html
-│   ├── css
-│   │   ├── animate.css
-│   │   ├── bootstrap.min.css
-│   │   ├── font-awesome.min.css
-│   │   ├── magnific-popup.css
-│   │   └── style.css
+│   ├── compute.html
 │   ├── error.html
-│   ├── fonts
-│   │   ├── FontAwesome.otf
-│   │   ├── fontawesome-webfont.eot
-│   │   ├── fontawesome-webfont.svg
-│   │   ├── fontawesome-webfont.ttf
-│   │   ├── fontawesome-webfont.woff
-│   │   └── fontawesome-webfont.woff2
-│   ├── images
-│   │   ├── favicon.ico
-│   │   ├── instagram-image1.jpg
-│   │   ├── instagram-image2.jpg
-│   │   ├── instagram-image3.jpg
-│   │   ├── instagram-image4.jpg
-│   │   ├── instagram-image5.jpg
-│   │   └── profile-image.jpg
 │   ├── index.html
-│   ├── js
-│   │   ├── bootstrap.min.js
-│   │   ├── custom.js
-│   │   ├── jquery.js
-│   │   ├── jquery.magnific-popup.min.js
-│   │   ├── magnific-popup-options.js
-│   │   ├── smoothscroll.js
-│   │   └── wow.min.js
-│   ├── login.html
+│   ├── picture
+│   │   ├── home.png
+│   │   └── img.jpg
 │   ├── picture.html
-│   ├── register.html
 │   ├── video
-│   │   └── xxx.mp4
-│   ├── video.html
-│   └── welcome.html
+│   │   └── mp4.mp4
+│   └── video.html
 └── server
     ├── epoller.cpp
     ├── epoller.h
@@ -84,6 +52,7 @@
     ├── threadpool.h
     ├── webserver.cpp
     └── webserver.h
+
 ```
 
 ## 项目启动
