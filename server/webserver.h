@@ -24,7 +24,8 @@ public:
         bool openLog, int logLevel, int logQueSize);
 
     ~WebServer();
-    void Start();
+    
+    void _Start();
 
 private:
     bool InitSocket_(); 
