@@ -27,11 +27,42 @@ WebServer::WebServer(
 }
 
 WebServer::~WebServer() {
-
+    close(listenFd_);
+    isClose_ = true;
+    free(srcDir_);
 }
 
 void WebServer::Start() {
+    int timeMS = -1;  /* epoll wait的timeout == -1 无事件将阻塞 */
+    if(!isClose_) { LOG_INFO("========== Server start =========="); }
+    while(!isClose_) {
+        int eventCnt = epoller_->Wait(timeMS);//返回值是 检测到有多少个事件发生 
 
+        for(int i = 0; i < eventCnt; i++) {
+            /* 处理事件 */
+            int fd = epoller_->GetEventFd(i); 
+            uint32_t events = epoller_->GetEvents(i); 
+
+            if(fd == listenFd_) {
+                DealListen_();
+            }
+            else if(events & (EPOLLRDHUP | EPOLLHUP | EPOLLERR)) {
+                assert(users_.count(fd) > 0);
+                CloseConn_(&users_[fd]);
+            }
+            else if(events & EPOLLIN) { 
+                assert(users_.count(fd) > 0);
+                DealRead_(&users_[fd]);
+            }
+            else if(events & EPOLLOUT) { 
+                assert(users_.count(fd) > 0);
+                DealWrite_(&users_[fd]);
+            } 
+            else {
+                LOG_ERROR("Unexpected event");
+            }
+        }
+    }
 }
 
 /* Create listenFd */
@@ -113,10 +144,81 @@ void WebServer::InitEventMode_(int trigMode) {
 	}
 	HttpConn::isET = (connEvent_ & EPOLLET);
 }
-void WebServer::AddClient_(int fd, sockaddr_in addr) {
 
+void WebServer::AddClient_(int fd, sockaddr_in addr) {
+    assert(fd > 0);
+    users_[fd].init(fd, addr);//用户数加一，地址，文件描述符，检查缓冲区...
+    epoller_->AddFd(fd, EPOLLIN | connEvent_); //向epoll中添加连接的文件描述符（读事件）
+    SetFdNonblock(fd); 
+    LOG_INFO("Client[%d] in!", users_[fd].GetFd());
 }
 
+void WebServer::DealListen_() {
+    struct sockaddr_in addr; 
+    socklen_t len = sizeof(addr);
+    do {
+        int fd = accept(listenFd_, (struct sockaddr *)&addr, &len);
+        if(fd <= 0) { return;} //
+        else if(HttpConn::userCount >= MAX_FD) {
+            SendError_(fd, "Server busy!");
+            LOG_WARN("Clients is full!");
+            return;
+        }
+        AddClient_(fd, addr); //添加客户端
+    } while(listenEvent_ & EPOLLET); //ET模式 
+}
+
+void WebServer::DealRead_(HttpConn* client) {
+    assert(client);
+    //由线程池中的工作线程处理事件————Reactor模式
+    threadpool_->AddTask(std::bind(&WebServer::OnRead_, this, client)); //读事件
+}
+
+void WebServer::DealWrite_(HttpConn* client) {
+    assert(client);
+    //由线程池中的工作线程处理事件————Reactor模式
+    threadpool_->AddTask(std::bind(&WebServer::OnWrite_, this, client)); //写事件
+}
+
+void WebServer::SendError_(int fd, const char*info) {
+    assert(fd > 0);
+    int ret = send(fd, info, strlen(info), 0);
+    if(ret < 0) {
+        LOG_WARN("send error to client[%d] error!", fd);
+    }
+    close(fd);
+}
+
+void WebServer::CloseConn_(HttpConn* client) {
+    assert(client);
+    LOG_INFO("Client[%d] quit!", client->GetFd());
+    epoller_->DelFd(client->GetFd());
+    client->Close();
+}
+
+void WebServer::OnRead_(HttpConn* client){
+    assert(client);
+    int ret = -1;
+    int readErrno = 0;
+    ret = client->read(&readErrno);
+    if(ret <= 0 && readErrno != EAGAIN) { 
+        CloseConn_(client);
+        return;
+    }
+    OnProcess(client); //处理业务逻辑
+}
+
+void WebServer::OnWrite_(HttpConn* client){
+    
+}
+
+void WebServer::OnProcess(HttpConn* client){
+    if(client->process()) { //解析完请求，并且响应封装好了
+        epoller_->ModFd(client->GetFd(), connEvent_ | EPOLLOUT); //修改文件描述符 改为 写事件
+    } else {
+        epoller_->ModFd(client->GetFd(), connEvent_ | EPOLLIN); //读事件 
+    }
+}
 
 int WebServer::SetFdNonblock(int fd){
     assert(fd > 0);
