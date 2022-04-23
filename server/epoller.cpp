@@ -35,7 +35,7 @@ bool Epoller::DelFd(int fd){
     return epoll_ctl(epollFd_, EPOLL_CTL_DEL, fd, &ev) == 0;
 }
 
-int Epoller::Wait(int timeoutMs = -1){
+int Epoller::Wait(int timeoutMs){
     return epoll_wait(epollFd_, &events_[0], static_cast<int>(events_.size()), timeoutMs);
 }
 
