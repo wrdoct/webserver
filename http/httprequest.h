@@ -40,10 +40,8 @@ public:
     //解析结果的部分封装
     std::string method() const;
     std::string path() const;
-    //std::string& path();   
+    std::string& path();   
     std::string version() const;
-    //std::string GetPost(const std::string& key) const;
-    //std::string GetPost(const char* key) const;
 
     bool IsKeepAlive() const; //是否保持 长连接
 
@@ -58,10 +56,10 @@ private:
     PARSE_STATE state_; 
     std::string method_, path_, version_, body_; 
     std::unordered_map<std::string, std::string> header_; 
-    std::unordered_map<std::string, std::string> post_; //post请求表单数据
+    //std::unordered_map<std::string, std::string> post_; //post请求表单数据
 
     static const std::unordered_set<std::string> DEFAULT_HTML; 
-    static const std::unordered_map<std::string, int> DEFAULT_HTML_TAG; 
+    //static const std::unordered_map<std::string, int> DEFAULT_HTML_TAG; 
 };
 
 
