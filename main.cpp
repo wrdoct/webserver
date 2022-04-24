@@ -12,10 +12,10 @@ int main(){
 
     WebServer server(
         1316, 3,            /* 端口 ET模式 */
-        12, 6,              /* 连接池数量 线程池数量 */
-        true, 1, 1024       /* 日志开关 日志等级 日志异步队列容量 */
+        12, 6              /* 连接池数量 线程池数量 */
         );
-    server.Start();
+
+    server._Start();
 
     return 0;
 }
