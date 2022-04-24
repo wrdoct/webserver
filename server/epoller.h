@@ -1,8 +1,3 @@
-/*
- * @Author       : llw
- * @Date         : 2022-04-20
- */ 
-
 #ifndef EPOLLER_H
 #define EPOLLER_H
 
