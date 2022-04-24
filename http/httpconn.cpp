@@ -24,8 +24,7 @@ void HttpConn::init(int fd, const sockaddr_in& addr) {
     writeBuff_.RetrieveAll(); //检查写缓冲区
     readBuff_.RetrieveAll(); //检查读缓冲区
     isClose_ = false; 
-    //LOG_INFO("Client[%d](%s:%d) in, userCount:%d", fd_, GetIP(), GetPort(), (int)userCount);
-    cout<<"Client"<<fd_<< GetIP()<<GetPort()<<"in, userCount"<<endl;
+    cout<<"Client"<<fd_<< GetIP()<<GetPort()<<"in, userCount"<<(int)userCount<<endl;
 }
 
 ssize_t HttpConn::read(int* saveErrno){
@@ -71,8 +70,7 @@ void HttpConn::Close() {
         isClose_ = true;
         userCount--; 
         close(fd_); //关闭文件描述符对应的连接
-        //LOG_INFO("Client[%d](%s:%d) quit, UserCount:%d", fd_, GetIP(), GetPort(), (int)userCount);
-        cout<<"Client"<<fd_<< GetIP()<<GetPort()<<"quit, userCount"<<endl;
+        cout<<"Client"<<fd_<< GetIP()<<GetPort()<<"quit, userCount:"<<(int)userCount<<endl;
     }
 }
 
@@ -99,8 +97,7 @@ bool HttpConn::process(){
         return false; 
     }
     else if(request_.parse(readBuff_)) { //解析并封装响应
-        //LOG_DEBUG("%s", request_.path().c_str());
-        cout<<"request_.path().c_str()"<<endl;
+        cout<<"request_.path():"<<request_.path().c_str()<<endl;
         //封装响应
         response_.Init(srcDir, request_.path(), request_.IsKeepAlive(), 200); //解析成功 开始封装响应
     } 
@@ -108,10 +105,11 @@ bool HttpConn::process(){
         response_.Init(srcDir, request_.path(), false, 400);
     }
 
-     response_.MakeResponse(writeBuff_); //响应保存在writeBuff_里面
+    response_.MakeResponse(writeBuff_); //响应保存在writeBuff_里面
     /* 响应头 */ //分散的写
     iov_[0].iov_base = const_cast<char*>(writeBuff_.Peek()); 
     iov_[0].iov_len = writeBuff_.ReadableBytes(); 
+    cout<<"iov_[0].iov_len "<<iov_[0].iov_len<<endl;
     iovCnt_ = 1;
 
     /* 文件 */
@@ -120,7 +118,6 @@ bool HttpConn::process(){
         iov_[1].iov_len = response_.FileLen(); //响应体的文件长度
         iovCnt_ = 2; //内存块大小
     }
-    //LOG_DEBUG("filesize:%d, %d  to %d", response_.FileLen() , iovCnt_, ToWriteBytes());
-    cout<<"filesize: "<<response_.FileLen()<<endl;
+    cout<<"filesize: "<<response_.FileLen()<<","<<iovCnt_<<" to "<<ToWriteBytes()<<endl;
     return true;
 }
