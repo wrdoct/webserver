@@ -2,21 +2,20 @@
 
 using namespace std;
 
-static const std::unordered_set<std::string> DEFAULT_HTML{
-    "/index", "/compute", "/picture", "/video", "/error"
+const std::unordered_set<std::string> HttpRequest::DEFAULT_HTML{
+    "/index", "/compute", "/picture", "/video", "/error",
 };
 
-static const std::unordered_map<std::string, int> DEFAULT_HTML_TAG{
+// static const std::unordered_map<std::string, int> HttpRequest::DEFAULT_HTML_TAG{
     
-};
+// };
 
 void HttpRequest::Init() {
     method_ = path_ = version_ = body_ = "";
     state_ = REQUEST_LINE;
     header_.clear();
-    post_.clear();
+    //post_.clear();
 }
-
 
 bool HttpRequest::parse(Buffer& buff) {
     const char CRLF[] = "\r\n"; //回车符 换行符
@@ -52,7 +51,8 @@ bool HttpRequest::parse(Buffer& buff) {
         buff.RetrieveUntil(lineEnd + 2);
     }
 
-    LOG_DEBUG("[%s], [%s], [%s]", method_.c_str(), path_.c_str(), version_.c_str());
+    //LOG_DEBUG("[%s], [%s], [%s]", method_.c_str(), path_.c_str(), version_.c_str());
+    cout<<"解析"<<endl;
     return true;
 }
 
@@ -64,29 +64,13 @@ std::string HttpRequest::path() const{
     return path_;
 }
 
-// std::string& HttpRequest::path(){
-//     return path_;
-// }
+std::string& HttpRequest::path(){
+    return path_;
+}
 
 std::string HttpRequest::version() const {
     return version_;
 }
-
-// std::string HttpRequest::GetPost(const std::string& key) const {
-//     assert(key != "");
-//     if(post_.count(key) == 1) {
-//         return post_.find(key)->second;
-//     }
-//     return "";
-// }
-
-// std::string HttpRequest::GetPost(const char* key) const {
-//     assert(key != nullptr);
-//     if(post_.count(key) == 1) {
-//         return post_.find(key)->second;
-//     }
-//     return "";
-// }
 
 //是否保持 长连接
 bool HttpRequest::IsKeepAlive() const {
@@ -107,7 +91,8 @@ bool HttpRequest::ParseRequestLine_(const string& line) {
         state_ = HEADERS; //状态改变 解析头
         return true;
     }
-    LOG_ERROR("RequestLine Error");
+    //LOG_ERROR("RequestLine Error");
+    cout<<"RequestLine Error"<<endl;
     return false;
 }
 
@@ -127,7 +112,8 @@ void HttpRequest::ParseBody_(const string& line) {
     body_ = line;
     ParsePost_();
     state_ = FINISH;
-    LOG_DEBUG("Body:%s, len:%d", line.c_str(), line.size());
+    //LOG_DEBUG("Body:%s, len:%d", line.c_str(), line.size());
+    cout<<"解析体"<<endl;
 }
 
 void HttpRequest::ParsePath_() {
@@ -147,7 +133,7 @@ void HttpRequest::ParsePath_() {
 void HttpRequest::ParsePost_(){
     if(method_ == "POST" && header_["Content-Type"] == "application/x-www-form-urlencoded") {
         //CGI服务器
-
+        
     } 
 }
 
