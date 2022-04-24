@@ -43,9 +43,6 @@ void Buffer::RetrieveAll(){
     readPos_ = 0;
     writePos_ = 0;
 } 
-std::string Buffer::RetrieveAllToStr(){
-
-}
 
 const char* Buffer::BeginWriteConst() const{
     return BeginPtr_() + writePos_;
@@ -55,19 +52,14 @@ char* Buffer::BeginWrite(){
 }
 
 void Buffer::Append(const std::string& str){
-
+    Append(str.data(), str.length());
 }
+
 void Buffer::Append(const char* str, size_t len){
     assert(str);
     EnsureWriteable(len); //这里的len是临时数组中的数据个数
     std::copy(str, str + len, BeginWrite());
     HasWritten(len);
-}
-void Buffer::Append(const void* data, size_t len){
-
-}
-void Buffer::Append(const Buffer& buff){
-
 }
 
 ssize_t Buffer::ReadFd(int fd, int* saveErrno){
@@ -94,9 +86,9 @@ ssize_t Buffer::ReadFd(int fd, int* saveErrno){
 
     return len;
 }
-ssize_t Buffer::WriteFd(int fd, int* saveErrno){
 
-}
+// ssize_t Buffer::WriteFd(int fd, int* saveErrno){
+// }
 
 char* Buffer::BeginPtr_() {
     return &*buffer_.begin();
