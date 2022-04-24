@@ -1,8 +1,3 @@
-/*
- * @Author       : llw
- * @Date         : 2022-04-20
- */ 
-
 #include "epoller.h"
 
 Epoller::Epoller(int maxEvent): epollFd_(epoll_create(512)), events_(maxEvent){
