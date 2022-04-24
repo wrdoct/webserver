@@ -51,8 +51,7 @@ bool HttpRequest::parse(Buffer& buff) {
         buff.RetrieveUntil(lineEnd + 2);
     }
 
-    //LOG_DEBUG("[%s], [%s], [%s]", method_.c_str(), path_.c_str(), version_.c_str());
-    cout<<"解析"<<endl;
+    cout<<"解析 "<<method_.c_str()<<" "<< path_.c_str()<<" "<< version_.c_str()<<endl;
     return true;
 }
 
@@ -91,7 +90,6 @@ bool HttpRequest::ParseRequestLine_(const string& line) {
         state_ = HEADERS; //状态改变 解析头
         return true;
     }
-    //LOG_ERROR("RequestLine Error");
     cout<<"RequestLine Error"<<endl;
     return false;
 }
@@ -112,8 +110,7 @@ void HttpRequest::ParseBody_(const string& line) {
     body_ = line;
     ParsePost_();
     state_ = FINISH;
-    //LOG_DEBUG("Body:%s, len:%d", line.c_str(), line.size());
-    cout<<"解析体"<<endl;
+    cout<<"Body:"<<line.c_str()<<" len:"<<line.size()<<endl;
 }
 
 void HttpRequest::ParsePath_() {
