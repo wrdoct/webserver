@@ -50,7 +50,6 @@ HttpResponse::~HttpResponse() {
     UnmapFile();
 }
 
-
 void HttpResponse::Init(const string& srcDir, string& path, bool isKeepAlive, int code){
     assert(srcDir != "");
     if(mmFile_) { UnmapFile(); }  //解除内存映射
@@ -79,6 +78,7 @@ void HttpResponse::MakeResponse(Buffer& buff) {
     AddStateLine_(buff); 
     AddHeader_(buff); 
     AddContent_(buff); 
+    cout<<"封装响应完成！"<<endl;
 }
 
 void HttpResponse::UnmapFile() {
