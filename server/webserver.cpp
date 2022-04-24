@@ -1,29 +1,23 @@
-
 #include "webserver.h"
 
 using namespace std;
 
 WebServer::WebServer(
 	int port, int trigMode,
-	int connPoolNum, int threadNum,
-	bool openLog, int logLevel, int logQueSize) :
+	int connPoolNum, int threadNum) :
 	port_(port), isClose_(false),
 	threadpool_(new ThreadPool(threadNum)), epoller_(new Epoller())
 {
 	srcDir_ = getcwd(nullptr, 256); //获取当前的工作路径
 	assert(srcDir_);
 	strncat(srcDir_, "/resources/", 16);
+    //strncat(srcDir_, "/resources", 16);
 	HttpConn::userCount = 0;
 	HttpConn::srcDir = srcDir_;
 
 	InitEventMode_(trigMode);//设置ET模式
     //初始化套接字
     if(!InitSocket_()) { isClose_ = true;}
-
-    //日志的初始化操作
-    if(openLog) {
-
-    }
 }
 
 WebServer::~WebServer() {
@@ -32,17 +26,17 @@ WebServer::~WebServer() {
     free(srcDir_);
 }
 
-void WebServer::Start() {
+void WebServer::_Start() {
     int timeMS = -1;  /* epoll wait的timeout == -1 无事件将阻塞 */
-    if(!isClose_) { LOG_INFO("========== Server start =========="); }
+    if(!isClose_) { cout << "========== Server start =========="<<endl; }
     while(!isClose_) {
         int eventCnt = epoller_->Wait(timeMS);//返回值是 检测到有多少个事件发生 
-
+        cout<<"eventCnt:"<<eventCnt<<endl;
         for(int i = 0; i < eventCnt; i++) {
             /* 处理事件 */
             int fd = epoller_->GetEventFd(i); 
             uint32_t events = epoller_->GetEvents(i); 
-
+            cout<<"判断事件的文件描述符"<<endl;
             if(fd == listenFd_) {
                 DealListen_();
             }
@@ -59,7 +53,7 @@ void WebServer::Start() {
                 DealWrite_(&users_[fd]);
             } 
             else {
-                LOG_ERROR("Unexpected event");
+                cout<<"Unexpected event"<<endl;
             }
         }
     }
@@ -69,7 +63,7 @@ void WebServer::Start() {
 bool WebServer::InitSocket_() {
     struct sockaddr_in addr;
     if(port_ > 65535 || port_ < 1024) {
-        LOG_ERROR("Port:%d error!",  port_);
+        cout<<"Port:"<<port_<<"error!"<<endl;
         return false;
     }
     addr.sin_family = AF_INET;
@@ -78,7 +72,7 @@ bool WebServer::InitSocket_() {
 
     listenFd_ = socket(AF_INET, SOCK_STREAM, 0);
     if(listenFd_ < 0) {
-        LOG_ERROR("Create socket error!", port_);
+        cout<<"Create socket error!"<<" "<<port_<<endl;
         return false;
     }
 
@@ -88,35 +82,34 @@ bool WebServer::InitSocket_() {
     /* 只有最后一个套接字会正常接收数据。 */
     ret = setsockopt(listenFd_, SOL_SOCKET, SO_REUSEADDR, (const void*)&optval, sizeof(int)); //设置端口复用
     if(ret == -1) {
-        LOG_ERROR("set socket setsockopt error !");
+        cout<<"set socket setsockopt error !"<<endl;
         close(listenFd_);
         return false;
     }
 
     ret = bind(listenFd_, (struct sockaddr *)&addr, sizeof(addr));
     if(ret < 0) {
-        LOG_ERROR("Bind Port:%d error!", port_);
+        cout<<"Bind Port:"<<port_<<"error!"<<endl;
         close(listenFd_);
         return false;
     }
 
     ret = listen(listenFd_, 6);
     if(ret < 0) {
-        LOG_ERROR("Listen port:%d error!", port_);
+        cout<<"Listen Port:"<<port_<<"error!"<<endl;
         close(listenFd_);
         return false;
     }
 
     ret = epoller_->AddFd(listenFd_,  listenEvent_ | EPOLLIN); //读
     if(ret == 0) { 
-        LOG_ERROR("Add listen error!");
+        cout<<"Add listen error!"<<endl;
         close(listenFd_);
         return false;
     }
 
     SetFdNonblock(listenFd_); //设置文件描述符非阻塞（epoll）
-    LOG_INFO("Server port:%d", port_);
-
+    cout<<"Server Port:"<<port_<<endl;
     return true;
 }
 
@@ -150,10 +143,11 @@ void WebServer::AddClient_(int fd, sockaddr_in addr) {
     users_[fd].init(fd, addr);//用户数加一，地址，文件描述符，检查缓冲区...
     epoller_->AddFd(fd, EPOLLIN | connEvent_); //向epoll中添加连接的文件描述符（读事件）
     SetFdNonblock(fd); 
-    LOG_INFO("Client[%d] in!", users_[fd].GetFd());
+    cout<<"AddClient_ "<<users_[fd].GetFd() <<" in!"<<endl;
 }
 
 void WebServer::DealListen_() {
+    cout<<"开始处理监听"<<endl;
     struct sockaddr_in addr; 
     socklen_t len = sizeof(addr);
     do {
@@ -161,7 +155,7 @@ void WebServer::DealListen_() {
         if(fd <= 0) { return;} //
         else if(HttpConn::userCount >= MAX_FD) {
             SendError_(fd, "Server busy!");
-            LOG_WARN("Clients is full!");
+            cout<<"Clients is full!"<<endl;
             return;
         }
         AddClient_(fd, addr); //添加客户端
@@ -169,12 +163,14 @@ void WebServer::DealListen_() {
 }
 
 void WebServer::DealRead_(HttpConn* client) {
+    cout<<"开始处理读事件"<<endl;
     assert(client);
     //由线程池中的工作线程处理事件————Reactor模式
     threadpool_->AddTask(std::bind(&WebServer::OnRead_, this, client)); //读事件
 }
 
 void WebServer::DealWrite_(HttpConn* client) {
+    cout<<"开始处理写事件"<<endl;
     assert(client);
     //由线程池中的工作线程处理事件————Reactor模式
     threadpool_->AddTask(std::bind(&WebServer::OnWrite_, this, client)); //写事件
@@ -184,14 +180,14 @@ void WebServer::SendError_(int fd, const char*info) {
     assert(fd > 0);
     int ret = send(fd, info, strlen(info), 0);
     if(ret < 0) {
-        LOG_WARN("send error to client[%d] error!", fd);
+        cout<<"send error to client"<<fd<<" error!"<<endl;
     }
     close(fd);
 }
 
 void WebServer::CloseConn_(HttpConn* client) {
     assert(client);
-    LOG_INFO("Client[%d] quit!", client->GetFd());
+    cout<<"Client"<<client->GetFd()<<" quit!"<<endl;
     epoller_->DelFd(client->GetFd());
     client->Close();
 }
@@ -209,7 +205,26 @@ void WebServer::OnRead_(HttpConn* client){
 }
 
 void WebServer::OnWrite_(HttpConn* client){
-    
+    assert(client);
+    int ret = -1;
+    int writeErrno = 0;
+    ret = client->write(&writeErrno);
+    if(client->ToWriteBytes() == 0) {
+        /* 传输完成 */
+        if(client->IsKeepAlive()) {
+            OnProcess(client);
+            return;
+        }
+    }
+    else if(ret < 0) {
+        if(writeErrno == EAGAIN) {
+            /* 继续传输 */
+            epoller_->ModFd(client->GetFd(), connEvent_ | EPOLLOUT); 
+            return;
+        }
+    }
+    //sleep(5000);
+    CloseConn_(client);
 }
 
 void WebServer::OnProcess(HttpConn* client){
