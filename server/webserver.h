@@ -20,8 +20,7 @@ class WebServer {
 public:
     WebServer(
         int port, int trigMode,
-        int connPoolNum, int threadNum,
-        bool openLog, int logLevel, int logQueSize);
+        int connPoolNum, int threadNum);
 
     ~WebServer();
     
