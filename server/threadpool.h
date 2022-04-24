@@ -1,8 +1,3 @@
-/*
- * @Author       : llw
- * @Date         : 2022-04-20
- */ 
-
 #ifndef THREADPOOL_H
 #define THREADPOOL_H
 
