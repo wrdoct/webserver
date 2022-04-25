@@ -31,11 +31,12 @@ void WebServer::_Start() {
     if(!isClose_) { cout << "========== Server start =========="<<endl; }
     while(!isClose_) {
         int eventCnt = epoller_->Wait(timeMS);//返回值是 检测到有多少个事件发生 
-        cout<<"eventCnt:"<<eventCnt<<endl;
+        //cout<<"eventCnt:"<<eventCnt<<endl;
         for(int i = 0; i < eventCnt; i++) {
             /* 处理事件 */
             int fd = epoller_->GetEventFd(i); 
-            uint32_t events = epoller_->GetEvents(i); 
+            uint32_t events = epoller_->GetEvents(i);
+            
             cout<<"判断事件的文件描述符"<<endl;
             if(fd == listenFd_) {
                 DealListen_();
@@ -187,7 +188,7 @@ void WebServer::SendError_(int fd, const char*info) {
 
 void WebServer::CloseConn_(HttpConn* client) {
     assert(client);
-    cout<<"Client"<<client->GetFd()<<" quit!"<<endl;
+    cout<<"Client:"<<client->GetFd()<<" quit!"<<endl;
     epoller_->DelFd(client->GetFd());
     client->Close();
 }
