@@ -50,7 +50,7 @@ HttpResponse::~HttpResponse() {
     UnmapFile();
 }
 
-void HttpResponse::Init(const string& srcDir, string& path, bool isKeepAlive, int code){
+void HttpResponse::Init(const string& srcDir, string& path, std::unordered_map<std::string, int> post_, bool isKeepAlive, int code){
     assert(srcDir != "");
     if(mmFile_) { UnmapFile(); }  //解除内存映射
 
@@ -60,6 +60,7 @@ void HttpResponse::Init(const string& srcDir, string& path, bool isKeepAlive, in
     srcDir_ = srcDir; //当前的工作路径
     mmFile_ = nullptr; 
     mmFileStat_ = { 0 };
+    post__ = post_;
 }
 
 void HttpResponse::MakeResponse(Buffer& buff) {
@@ -149,6 +150,12 @@ void HttpResponse::AddContent_(Buffer& buff) {
         return; 
     }
 
+    //POST
+    if(path_ == "/CGI/compute_.html"){
+        AddPostContent_(buff);
+        return;
+    }
+
     /* 将文件映射到内存提高文件的访问速度 
         MAP_PRIVATE 建立一个写入时拷贝的私有映射*/
     //LOG_DEBUG("file path %s", (srcDir_ + path_).data());
@@ -184,4 +191,19 @@ string HttpResponse::GetFileType_() {
     }
 
     return "text/plain";
+}
+
+void HttpResponse::AddPostContent_(Buffer& buff){
+    int a, b;
+    a = post__["a"];
+    b = post__["b"];
+
+    int sum = a + b;
+    string body;
+    body += "<html><head><title>niliushall's CGI</title></head>";
+    body += "<body><p>The result is " + to_string(a) + "+" + to_string(b) + " = " + to_string(sum);
+    body += "</p></body></html>";
+
+    buff.Append("Content-length: " + to_string(body.size()) + "\r\n\r\n");
+    buff.Append(body);
 }

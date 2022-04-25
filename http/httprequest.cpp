@@ -14,7 +14,7 @@ void HttpRequest::Init() {
     method_ = path_ = version_ = body_ = "";
     state_ = REQUEST_LINE;
     header_.clear();
-    //post_.clear();
+    post_.clear();
 }
 
 bool HttpRequest::parse(Buffer& buff) {
@@ -26,7 +26,6 @@ bool HttpRequest::parse(Buffer& buff) {
         //获取一行数据，根据\r\n为结束标志
         const char* lineEnd = search(buff.Peek(), buff.BeginWriteConst(), CRLF, CRLF + 2);
         std::string line(buff.Peek(), lineEnd); //封装在line里
-
         switch(state_)
         {
         case REQUEST_LINE:
@@ -51,7 +50,7 @@ bool HttpRequest::parse(Buffer& buff) {
         buff.RetrieveUntil(lineEnd + 2);
     }
 
-    cout<<"解析 "<<method_.c_str()<<" "<< path_.c_str()<<" "<< version_.c_str()<<endl;
+    cout<<"解析结果  method_:"<<method_.c_str()<<" path_:"<< path_.c_str()<<" version_:"<< version_.c_str()<<endl;
     return true;
 }
 
@@ -100,6 +99,7 @@ void HttpRequest::ParseHeader_(const string& line) {
     smatch subMatch;
     if(regex_match(line, subMatch, patten)) { 
         header_[subMatch[1]] = subMatch[2]; 
+        //cout<<"头"<<header_[subMatch[1]] <<" "<< subMatch[2]<<endl;
     }
     else { //没匹配成功（数据是 回车换行） 就改变状态为 解析请求体
         state_ = BODY;
@@ -128,9 +128,47 @@ void HttpRequest::ParsePath_() {
 }
 
 void HttpRequest::ParsePost_(){
-    if(method_ == "POST" && header_["Content-Type"] == "application/x-www-form-urlencoded") {
-        //CGI服务器
-        
+    if(method_ == "POST" /*&& header_["Content-Type"] == "application/x-www-form-urlencoded"*/) {
+        cout<<"解析POST请求"<<endl;
+        ParseFromUrlencoded_();
+        //int len = std::stoi(header_["Content-Length"]);
+        //cout<<len<<endl;
+        path_ = "/CGI/compute_.html";
     } 
 }
 
+void HttpRequest::ParseFromUrlencoded_() {
+    if(body_.size() == 0) { return; }
+
+    string key;
+    int value;
+
+    int n = body_.size();
+    int i = 0, j = 0;
+    for(; i < n; i++) {
+        char ch = body_[i];
+        switch (ch) {
+        case '=':
+            key = body_.substr(j, i - j);
+            j = i + 1;
+            break;
+        case '&':
+            value = stoi(body_.substr(j, i - j));
+            j = i + 1;
+            post_[key] = value;
+            break;
+        default:
+            break;
+        }
+    }
+    
+    assert(j <= i);
+    if(j < i) {
+        value = stoi(body_.substr(j, i - j));
+        post_[key] = value;
+    }
+}
+
+std::unordered_map<std::string, int> HttpRequest::Post_(){
+    return post_;
+}

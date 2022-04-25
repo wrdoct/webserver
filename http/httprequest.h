@@ -45,6 +45,8 @@ public:
 
     bool IsKeepAlive() const; //是否保持 长连接
 
+    std::unordered_map<std::string, int> Post_();
+
 private:
     bool ParseRequestLine_(const std::string& line); 
     void ParseHeader_(const std::string& line); 
@@ -52,14 +54,14 @@ private:
 
     void ParsePath_(); 
     void ParsePost_(); 
-    
+    void ParseFromUrlencoded_(); //解析表单数据
+       
     PARSE_STATE state_; 
     std::string method_, path_, version_, body_; 
     std::unordered_map<std::string, std::string> header_; 
-    //std::unordered_map<std::string, std::string> post_; //post请求表单数据
+    std::unordered_map<std::string, int> post_; //post请求表单数据
 
     static const std::unordered_set<std::string> DEFAULT_HTML; 
-    //static const std::unordered_map<std::string, int> DEFAULT_HTML_TAG; 
 };
 
 

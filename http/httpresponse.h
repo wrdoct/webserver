@@ -15,13 +15,15 @@ public:
     HttpResponse();
     ~HttpResponse();
 
-    void Init(const std::string& srcDir, std::string& path, bool isKeepAlive = false, int code = -1);
+    void Init(const std::string& srcDir, std::string& path, std::unordered_map<std::string, int> post_, bool isKeepAlive = false, int code = -1);
     void MakeResponse(Buffer& buff);
     void UnmapFile(); //解除内存映射
     char* File();
     size_t FileLen() const;
     void ErrorContent(Buffer& buff, std::string message);
     int Code() const { return code_; }
+
+    void AddPostContent_(Buffer& buff);
 
 private:
     void AddStateLine_(Buffer &buff);
@@ -39,6 +41,8 @@ private:
     
     char* mmFile_; //文件内存映射的指针
     struct stat mmFileStat_; //文件的状态信息
+
+    std::unordered_map<std::string, int> post__; //post请求表单数据
 
     static const std::unordered_map<std::string, std::string> SUFFIX_TYPE; 
     static const std::unordered_map<int, std::string> CODE_STATUS; 
