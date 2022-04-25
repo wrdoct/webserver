@@ -35,7 +35,7 @@ void Buffer::Retrieve(size_t len){
 }
 void Buffer::RetrieveUntil(const char* end){
     assert(Peek() <= end );
-    
+    Retrieve(end - Peek()); //移动读指针
 }
 
 void Buffer::RetrieveAll(){
