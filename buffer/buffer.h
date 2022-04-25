@@ -14,9 +14,9 @@ public:
     Buffer(int initBuffSize = 1024);
     ~Buffer() = default; 
 
-    size_t WritableBytes() const;  //可写的字节数     
+    size_t WritableBytes() const; //可写的字节数     
     size_t ReadableBytes() const ; //可读的字节数 
-    size_t PrependableBytes() const;  //前面可以用的空间
+    size_t PrependableBytes() const; //前面可以用的空间
 
     const char* Peek() const;
     void EnsureWriteable(size_t len);
